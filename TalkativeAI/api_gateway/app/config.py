@@ -1,0 +1,5 @@
+AUTH_URL = "http://auth_service:8000"
+CONVERSATION_URL = "http://conversation_service:8000"
+SPEECH_URL = "http://speech_service:8000"
+VISION_URL = "http://vision_service:8000"
+ANALYTICS_URL = "http://analytics_service:8000"

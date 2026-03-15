@@ -1,0 +1,135 @@
+version: "3.9"
+
+services:
+
+  postgres:
+
+    image: postgres:15
+
+    container_name: talkativeai_postgres
+
+    environment:
+
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    ports:
+      - "5432:5432"
+
+
+  redis:
+
+    image: redis:7
+
+    container_name: talkativeai_redis
+
+    ports:
+      - "6379:6379"
+
+
+  auth_service:
+
+    build: ./auth_service
+
+    container_name: auth_service
+
+    depends_on:
+      - postgres
+
+    environment:
+      DB_HOST: postgres
+
+    ports:
+      - "8001:8000"
+
+
+  conversation_service:
+
+    build: ./conversation_service
+
+    container_name: conversation_service
+
+    depends_on:
+      - redis
+
+    environment:
+      REDIS_HOST: redis
+
+    ports:
+      - "8002:8000"
+
+
+  speech_service:
+
+    build: ./speech_service
+
+    container_name: speech_service
+
+    ports:
+      - "8003:8000"
+
+
+  vision_service:
+
+    build: ./vision_service
+
+    container_name: vision_service
+
+    ports:
+      - "8004:8000"
+
+
+  analytics_service:
+
+    build: ./analytics_service
+
+    container_name: analytics_service
+
+    depends_on:
+      - postgres
+
+    environment:
+      DB_HOST: postgres
+
+    ports:
+      - "8005:8000"
+
+
+  api_gateway:
+
+    build: ./api_gateway
+
+    container_name: api_gateway
+
+    depends_on:
+      - auth_service
+      - conversation_service
+      - speech_service
+      - vision_service
+      - analytics_service
+
+    ports:
+      - "8000:8000"
+
+
+  frontend:
+
+    build: ./frontend
+
+    container_name: frontend
+
+    depends_on:
+      - api_gateway
+
+    ports:
+      - "3000:80"
+
+
+volumes:
+
+  postgres_data:
